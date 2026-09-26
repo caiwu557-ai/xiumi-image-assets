@@ -1,0 +1,1 @@
+# xiumi-image-assets
