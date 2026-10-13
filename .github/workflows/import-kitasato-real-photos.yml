@@ -1,0 +1,40 @@
+name: Import Kitasato archival photographs
+
+on:
+  push:
+    paths:
+      - ".github/workflows/import-kitasato-real-photos.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import-photographs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download authentic images from Wikimedia Commons
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p kitasato/real
+          curl -fL --retry 4 --retry-delay 3 --connect-timeout 20 -A 'Mozilla/5.0 (Xiumi archival graphics; source attribution)' 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Shibasabur%C5%8D%20Kitasato%201910.jpg' -o kitasato/real/kitasato-1910.jpg
+          curl -fL --retry 4 --retry-delay 3 --connect-timeout 20 -A 'Mozilla/5.0 (Xiumi archival graphics; source attribution)' 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Young%20Kitasato%20Shibasabur%C5%8D%20in%20lab.jpg' -o kitasato/real/kitasato-laboratory-1890s.jpg
+          curl -fL --retry 4 --retry-delay 3 --connect-timeout 20 -A 'Mozilla/5.0 (Xiumi archival graphics; source attribution)' 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Kitasato%20Institute.jpg' -o kitasato/real/kitasato-institute-preserved-2005.jpg
+          for f in kitasato/real/*.jpg; do
+            echo "$f: $(file -b --mime-type "$f") $(wc -c < "$f") bytes"
+            test "$(file -b --mime-type "$f")" = "image/jpeg"
+            test "$(wc -c < "$f")" -gt 15000
+          done
+      - name: Commit and push new archival photograph files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add kitasato/real/*.jpg
+          if ! git diff --cached --quiet; then
+            git commit -m "Add three sourced Kitasato archival and preserved-building photos"
+            git push
+          fi
