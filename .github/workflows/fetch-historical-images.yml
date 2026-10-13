@@ -41,3 +41,5 @@ jobs:
             git commit -m "Add historical Merrill Chase and Karl Landsteiner photos"
             git push
           fi
+
+# trigger refresh
